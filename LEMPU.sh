@@ -7,7 +7,6 @@ echo ""
 # Install Nginx... First check if there is a installation
 if [ ! -e $HOME/.config/nginx/ ]; then
 	echo "Where do you want me to install Nginx?"
-	echo "Defualt: ~/.config/nginx)"
 	read -p "Folder: " -e -i $HOME/.config/nginx/ NGDIRECTORY
 	# Create the home directory
 	mkdir -p $NGDIRECTORY
@@ -21,8 +20,7 @@ if [ ! -e $HOME/.config/nginx/ ]; then
 	if [ $USERPORT != "" ]; then
 		PORT=$USERPORT
 	fi
-	echo ""
-	if [ ! -e $NGDIRECTORY/nginx.conf ]; then
+	if [ -e $NGDIRECTORY/nginx.conf ]; then
 	# Echo configuration to nginx conf file
 		echo "# nginx.conf" >> $NGDIRECTORY/nginx.conf
 		echo "error_log /home/victor/.config/nginx/error.log info;" >> $NGDIRECTORY/nginx.conf
@@ -60,7 +58,9 @@ if [ ! -e $HOME/.config/nginx/ ]; then
 		if [ $AUTHSERVICES = 'y' ]; then
 			echo "        auth_basic "Please enter your credentials";" >> $NGDIRECTORY/nginx.conf
 			echo "        auth_basic_user_file $NGDIRECTORY/htpasswd.conf;" >> $NGDIRECTORY/nginx.conf #file with user:pass info
-			touch $NGDIRECTORY/htpasswd.conf
+			if [ ! -e $NGDIRECTORY/htpasswd.conf ]; then
+				touch $NGDIRECTORY/htpasswd.conf
+			fi
 			read -p "What user do you want for authentication?: " -e -i $USER $USERNGINX
 			read -p "What password do you want for your user?: " -e -i pass $PASSNGINX
 			CRYPTNGINX = crypt $PASSNGINX
