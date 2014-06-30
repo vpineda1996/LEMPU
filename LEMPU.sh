@@ -20,57 +20,57 @@ if [ ! -e $HOME/.config/nginx/ ]; then
 	if [ $USERPORT != "" ]; then
 		PORT=$USERPORT
 	fi
-	if [ -e $NGDIRECTORY/nginx.conf ]; then
-	# Echo configuration to nginx conf file
-		echo "# nginx.conf" >> $NGDIRECTORY/nginx.conf
-		echo "error_log /home/victor/.config/nginx/error.log info;" >> $NGDIRECTORY/nginx.conf
- 		echo "pid /dev/null;" >> $NGDIRECTORY/nginx.conf
- 		echo "events { worker_connections 128; }" >> $NGDIRECTORY/nginx.conf
-		echo ""  >> $NGDIRECTORY/nginx.conf
-		echo "http {" >> $NGDIRECTORY/nginx.conf
-		echo "    include mimes.conf; #for custom file types" >> $NGDIRECTORY/nginx.conf
-		echo "    default_type application/octet-stream;" >> $NGDIRECTORY/nginx.conf
-		echo "    access_log $NGDIRECTORY/access.log combined;" >> $NGDIRECTORY/nginx.conf
-		echo "" >> $NGDIRECTORY/nginx.conf
-		echo "    lient_body_temp_path $NGDIRECTORY/tmp/client_body;" >> $NGDIRECTORY/nginx.conf
-		echo "    proxy_temp_path $NGDIRECTORY/tmp/proxy;" >> $NGDIRECTORY/nginx.conf
-		echo "    fastcgi_temp_path $NGDIRECTORY/tmp/fastcgi;" >> $NGDIRECTORY/nginx.conf
-		echo "    uwsgi_temp_path $NGDIRECTORY/tmp/uwsgi;" >> $NGDIRECTORY/nginx.conf
-		echo "    scgi_temp_path $NGDIRECTORY/tmp/scgi;" >> $NGDIRECTORY/nginx.conf
-		echo "" >> $NGDIRECTORY/nginx.conf
-		echo "    server_tokens off;" >> $NGDIRECTORY/nginx.conf
-		echo "    sendfile on;" >> $NGDIRECTORY/nginx.conf
-		echo "    tcp_nopush on;" >> $NGDIRECTORY/nginx.conf
-		echo "    tcp_nodelay on;" >> $NGDIRECTORY/nginx.conf
-		echo "    keepalive_timeout 4;" >> $NGDIRECTORY/nginx.conf
-		echo "" >> $NGDIRECTORY/nginx.conf
-		echo "    output_buffers   1 32k;" >> $NGDIRECTORY/nginx.conf
-		echo "    postpone_output  1460;" >> $NGDIRECTORY/nginx.conf
-		echo "" >> $NGDIRECTORY/nginx.conf
-		echo "    server {" >> $NGDIRECTORY/nginx.conf
-		echo "        listen ${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv4
-		echo "        listen [::]:${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv6
-		echo "        autoindex on;" >> $NGDIRECTORY/nginx.conf #this is the file list
-		# Check if user wants authentication services
-		read -p "Where do you want your root directory?: " -e -i /home/$USER/files/ NGROOTDIR
-		echo "        root $NGROOTDIR;" >> $NGDIRECTORY/nginx.conf #path you want to share
-		read -p "Do you want authentication services?[y/n]: " -e -i y AUTHSERVICES
-		if [ $AUTHSERVICES = 'y' ]; then
-			echo "        auth_basic "Please enter your credentials";" >> $NGDIRECTORY/nginx.conf
-			echo "        auth_basic_user_file $NGDIRECTORY/htpasswd.conf;" >> $NGDIRECTORY/nginx.conf #file with user:pass info
-			if [ ! -e $NGDIRECTORY/htpasswd.conf ]; then
-				touch $NGDIRECTORY/htpasswd.conf
-			fi
-			read -p "What user do you want for authentication?: " -e -i $USER $USERNGINX
-			read -p "What password do you want for your user?: " -e -i pass $PASSNGINX
-			CRYPTNGINX = crypt $PASSNGINX
-			# Echo user to htpasswd.conf
-			echo "$USERNGINX:$CRYPTNGINX" >> $NGDIRECTORY/htpasswd.conf
-		fi
-		echo "    }" >> $NGDIRECTORY/nginx.conf
-		echo "}" >> $NGDIRECTORY/nginx.conf
 
+	# Echo configuration to nginx conf file
+	echo "# nginx.conf" >> $NGDIRECTORY/nginx.conf
+	echo "error_log /home/victor/.config/nginx/error.log info;" >> $NGDIRECTORY/nginx.conf
+ 	echo "pid /dev/null;" >> $NGDIRECTORY/nginx.conf
+ 	echo "events { worker_connections 128; }" >> $NGDIRECTORY/nginx.conf
+	echo ""  >> $NGDIRECTORY/nginx.conf
+	echo "http {" >> $NGDIRECTORY/nginx.conf
+	echo "    include mimes.conf; #for custom file types" >> $NGDIRECTORY/nginx.conf
+	echo "    default_type application/octet-stream;" >> $NGDIRECTORY/nginx.conf
+	echo "    access_log $NGDIRECTORY/access.log combined;" >> $NGDIRECTORY/nginx.conf
+	echo "" >> $NGDIRECTORY/nginx.conf
+	echo "    lient_body_temp_path $NGDIRECTORY/tmp/client_body;" >> $NGDIRECTORY/nginx.conf
+	echo "    proxy_temp_path $NGDIRECTORY/tmp/proxy;" >> $NGDIRECTORY/nginx.conf
+	echo "    fastcgi_temp_path $NGDIRECTORY/tmp/fastcgi;" >> $NGDIRECTORY/nginx.conf
+	echo "    uwsgi_temp_path $NGDIRECTORY/tmp/uwsgi;" >> $NGDIRECTORY/nginx.conf
+	echo "    scgi_temp_path $NGDIRECTORY/tmp/scgi;" >> $NGDIRECTORY/nginx.conf
+	echo "" >> $NGDIRECTORY/nginx.conf
+	echo "    server_tokens off;" >> $NGDIRECTORY/nginx.conf
+	echo "    sendfile on;" >> $NGDIRECTORY/nginx.conf
+	echo "    tcp_nopush on;" >> $NGDIRECTORY/nginx.conf
+	echo "    tcp_nodelay on;" >> $NGDIRECTORY/nginx.conf
+	echo "    keepalive_timeout 4;" >> $NGDIRECTORY/nginx.conf
+	echo "" >> $NGDIRECTORY/nginx.conf
+	echo "    output_buffers   1 32k;" >> $NGDIRECTORY/nginx.conf
+	echo "    postpone_output  1460;" >> $NGDIRECTORY/nginx.conf
+	echo "" >> $NGDIRECTORY/nginx.conf
+	echo "    server {" >> $NGDIRECTORY/nginx.conf
+	echo "        listen ${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv4
+	echo "        listen [::]:${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv6
+	echo "        autoindex on;" >> $NGDIRECTORY/nginx.conf #this is the file list
+	# Check if user wants authentication services
+	read -p "Where do you want your root directory?: " -e -i /home/$USER/files/ NGROOTDIR
+	echo "        root $NGROOTDIR;" >> $NGDIRECTORY/nginx.conf #path you want to share
+	read -p "Do you want authentication services?[y/n]: " -e -i y AUTHSERVICES
+	if [ $AUTHSERVICES = 'y' ]; then
+		echo "        auth_basic "Please enter your credentials";" >> $NGDIRECTORY/nginx.conf
+		echo "        auth_basic_user_file $NGDIRECTORY/htpasswd.conf;" >> $NGDIRECTORY/nginx.conf #file with user:pass info
+		if [ ! -e $NGDIRECTORY/htpasswd.conf ]; then
+			touch $NGDIRECTORY/htpasswd.conf
+		fi
+		read -p "What user do you want for authentication?: " -e -i $USER $USERNGINX
+		read -p "What password do you want for your user?: " -e -i pass $PASSNGINX
+		CRYPTNGINX = crypt $PASSNGINX
+		# Echo user to htpasswd.conf
+		echo "$USERNGINX:$CRYPTNGINX" >> $NGDIRECTORY/htpasswd.conf
 	fi
+	echo "    }" >> $NGDIRECTORY/nginx.conf
+	echo "}" >> $NGDIRECTORY/nginx.conf
+
+
 	# Create mime file if it doesn't exist
 	if [ ! -e $NGDIRECTORY/mimes.conf  ]; then
 		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/mimes.conf -q -O $NGDIRECTORY/mimes.conf
