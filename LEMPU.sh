@@ -5,7 +5,7 @@ echo "I need to ask you a few questions before starting the setup"
 echo "You can leave the default options and just press enter if you are ok with them"
 echo ""
 # Install Nginx... First check if there is a installation
-if [ -e $HOME/.config/nginx/nginx.conf ]; then
+if [ ! -e $HOME/.config/nginx/ ]; then
 	echo "Where do you want me to install Nginx?"
 	echo "Defualt: ~/.config/nginx)"
 	read -p "Folder: " -e -i $HOME/.config/nginx/ NGDIRECTORY
@@ -22,7 +22,7 @@ if [ -e $HOME/.config/nginx/nginx.conf ]; then
 		PORT=$USERPORT
 	fi
 	echo ""
-	if [ -e $NGDIRECTORY/nginx.conf ]; then
+	if [ ! -e $NGDIRECTORY/nginx.conf ]; then
 	# Echo configuration to nginx conf file
 		echo "# nginx.conf" $NGDIRECTORY/nginx.conf
 		echo "error_log /home/victor/.config/nginx/error.log info;" >> $NGDIRECTORY/nginx.conf
@@ -72,7 +72,7 @@ if [ -e $HOME/.config/nginx/nginx.conf ]; then
 
 	fi
 	# Create mime file if it doesn't exist
-	if [  -e $NGDIRECTORY/mimes.conf  ]; then
+	if [ ! -e $NGDIRECTORY/mimes.conf  ]; then
 		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/mimes.conf -q -O $NGDIRECTORY/mimes.conf
 	fi
 fi
