@@ -24,7 +24,7 @@ if [ ! -e $HOME/.config/nginx/ ]; then
 	echo ""
 	if [ ! -e $NGDIRECTORY/nginx.conf ]; then
 	# Echo configuration to nginx conf file
-		echo "# nginx.conf" $NGDIRECTORY/nginx.conf
+		echo "# nginx.conf" >> $NGDIRECTORY/nginx.conf
 		echo "error_log /home/victor/.config/nginx/error.log info;" >> $NGDIRECTORY/nginx.conf
  		echo "pid /dev/null;" >> $NGDIRECTORY/nginx.conf
  		echo "events { worker_connections 128; }" >> $NGDIRECTORY/nginx.conf
@@ -65,7 +65,7 @@ if [ ! -e $HOME/.config/nginx/ ]; then
 			read -p "What password do you want for your user?: " -e -i pass $PASSNGINX
 			CRYPTNGINX = crypt $PASSNGINX
 			# Echo user to htpasswd.conf
-			echo "$USERNGINX:$CRYPTNGINX"
+			echo "$USERNGINX:$CRYPTNGINX" >> $NGDIRECTORY/htpasswd.conf
 		fi
 		echo "    }" >> $NGDIRECTORY/nginx.conf
 		echo "}" >> $NGDIRECTORY/nginx.conf
