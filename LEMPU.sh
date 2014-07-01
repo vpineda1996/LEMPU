@@ -1,13 +1,4 @@
 #!/bin/bash
-echo 'Welcome to this quick LEMP installer'
-echo ""
-# LEMP setup and first user creation
-echo "I need to ask you a few questions before starting the setup"
-echo "You can leave the default options and just press enter if you are ok with them"
-echo ""
-# Nginx version 1.7.2
-# MySQL version 5.6.19
-# PHP version 5.5.14
 
 # Variables used in this script
 
@@ -18,6 +9,18 @@ echo ""
 # @param MYSQLDIRECTORY = Configuration dir for MySQL
 # @param MYSQLROOTPASSWORD = MySQL root Password
 # @param PHPFPMIRECTORY = Configuration dir for PHP-FPM
+
+# Nginx version 1.7.2
+# MySQL version 5.6.19
+# PHP version 5.5.14
+
+
+echo 'Welcome to this quick LEMP installer'
+echo ""
+echo "I need to ask you a few questions before starting the setup"
+echo "You can leave the default options and just press enter if you are ok with them"
+echo ""
+
 
 # Setup Root Dir
 function InstallPath {
@@ -94,6 +97,9 @@ function ConfigureNginx {
 	echo "        autoindex on;" >> $NGDIRECTORY/nginx.conf #this is the file list
 	# Check if user wants authentication services
 	read -p "Where do you want your root directory?: " -e -i /home/$USER/files/ NGROOTDIR
+	if [ ! -e $NGROOTDIR ]; then
+		mkdir -p $NGROOTDIR
+	fi
 	echo "        root $NGROOTDIR;" >> $NGDIRECTORY/nginx.conf #path you want to share
 	read -p "Do you want authentication services?[y/n]: " -e -i y AUTHSERVICES
 	if [ $AUTHSERVICES = 'y' ]; then
@@ -182,7 +188,7 @@ function ConfigureMySQL {
  	$LAMPDIRECTORY/init.d/mysql.server start
  	echo "What passowrd do you want for MySQL root user?"
  	read -p "Password: " -e -i pass MYSQLROOTPASSWORD
- 	$LAMPDIRECTORYmysql/bin/mysqladmin -u root password '$MYSQLROOTPASSWORD' --socket=$HOME/.config/mysql/socket.sock
+ 	$LAMPDIRECTORY/mysql/bin/mysqladmin -u root password '$MYSQLROOTPASSWORD' --socket=$MYSQLDIRECTORY/socket.sock
 }
 
 # Install php-fpm in $LAMPDIRECTORY  --- incomplete
@@ -359,5 +365,3 @@ do
 		4) exit;;
 	esac
 done
-
-
