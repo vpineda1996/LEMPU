@@ -44,6 +44,7 @@ function InstallNginx {
 	rm -r nginx-1.7.2
 }
 # Configure Nginx in $NGDIRECTORY
+# Port Number $PORT
 function ConfigureNginx {
 	if [[ -v NGDIRECTORY ]]; then
 		echo "Where do you want me to configure Nginx?"
@@ -101,18 +102,30 @@ function ConfigureNginx {
 		if [ ! -e $NGDIRECTORY/htpasswd.conf ]; then
 			touch $NGDIRECTORY/htpasswd.conf
 		fi
-		read -p "What user do you want for authentication?: " -e -i $USER $USERNGINX
-		read -p "What password do you want for your user?: " -e -i pass $PASSNGINX
+		read -p "What user do you want for authentication?: " -e -i $USER USERNGINX
+		read -p "What password do you want for your user?: " -e -i pass PASSNGINX
 		CRYPTNGINX = crypt $PASSNGINX
 		# Echo user to htpasswd.conf
 		echo "$USERNGINX:$CRYPTNGINX" >> $NGDIRECTORY/htpasswd.conf
 	fi
+	read -p "Do you want PHP & nginx?[y/n]: " -e -i y NGINXPHP
+	if [ $NGINXPHP = 'y' ]; then
+		if [[ -v PHPFPMIRECTORY ]]; then
+			echo "What is the folder where PHP's socket is?"
+			read -p "Folder" -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
+		fi
+		echo "		location ~ \\.php\$ {" >> $NGDIRECTORY/nginx.conf
+    	echo "		include fastcgi_params;" >> $NGDIRECTORY/nginx.conf
+    	echo "		fastcgi_pass unix:$PHPFPMIRECTORY/socket;" >> $NGDIRECTORY/nginx.conf
+    fi
 	echo "    }" >> $NGDIRECTORY/nginx.conf
 	echo "}" >> $NGDIRECTORY/nginx.conf
 	# Create mime file if it doesn't exist
 	if [ ! -e $NGDIRECTORY/mimes.conf  ]; then
 		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/mimes.conf -q -O $NGDIRECTORY/mimes.conf
 	fi
+	
+ }
 }
 
 #First check if there is a installation
@@ -202,6 +215,7 @@ function InstallFPM {
  	mv sapi/fpm/init.d.php-fpm $LAMPDIRECTORY/init.d/php-fpm
  	cd ..
 }
+
 function ConfigureFPM {
 	if [[ -v PHPFPMIRECTORY ]]; then
 		echo "Where do you want me to configure PHP-FPM?"
@@ -211,14 +225,37 @@ function ConfigureFPM {
 	if [ ! -e $PHPFPMIRECTORY ]; then
 		mkdir -p $PHPFPMIRECTORY
 	fi
-
+	touch $PHPFPMIRECTORY/conf
+	echo "[global]" >> $PHPFPMIRECTORY/conf
+	echo "daemonize = yes" >> $PHPFPMIRECTORY/conf
+	echo "error_log = $PHPFPMIRECTORY/error.log" >> $PHPFPMIRECTORY/conf
+	echo "" >> $PHPFPMIRECTORY/conf
+	echo "[www]" >> $PHPFPMIRECTORY/conf
+	echo "listen = $PHPFPMIRECTORY/socket" >> $PHPFPMIRECTORY/conf
+	echo "" >> $PHPFPMIRECTORY/conf
+	echo "listen.group = $USER" >> $PHPFPMIRECTORY/conf
+	echo "listen.mode = 0600" >> $PHPFPMIRECTORY/conf
+	echo "" >> $PHPFPMIRECTORY/conf
+	echo "pm = dynamic" >> $PHPFPMIRECTORY/conf
+	echo "pm.max_children = 20" >> $PHPFPMIRECTORY/conf
+	echo "pm.start_servers = 1" >> $PHPFPMIRECTORY/conf
+	echo "pm.min_spare_servers = 1" >> $PHPFPMIRECTORY/conf
+	echo "pm.max_spare_servers = 5" >> $PHPFPMIRECTORY/conf
+	if [ ! -e $NGDIRECTORY/fastcgi_params  ]; then
+		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/fastcgi_params -q -O $NGDIRECTORY/fastcgi_params
+	fi
 }
+
 function StartMySQL {
 	$LAMPDIRECTORY/mysql/support-files/mysql.server start
 }
 
 function StartPHPFPM {
 	$LAMPDIRECTORY/init.d/php-fpm start
+}
+
+function StartNGINX {
+	$LAMPDIRECTORY/sbin/nginx -c $NGDIRECTORY/nginx.conf
 }
 
 while :
@@ -244,8 +281,17 @@ do
 				case $setupOption in
 					1) # Install and configure all
 						InstallPath
+						# Install MySQL...
+						InstallMySQL
+						echo "Confgiuring MySQL"
+						ConfigureMySQL
+						# Install FPM...
+						InstallFPM
+						echo "Confgiuring MySQL"
+						ConfigureFPM
 						# Install Nginx...
 						InstallNginx
+						echo "Confgiuring NGINX"
 						CheckConfigNginx
 						exit
 						;;
@@ -259,9 +305,18 @@ do
 						;;
 					3) # Install and Configure MySQL
 						InstallPath
+						# Install MySQL...
 						InstallMySQL
 						echo "Confgiuring MySQL"
 						ConfigureMySQL
+						exit
+						;;
+					4) # Install and Configure PHP-FPM
+						InstallPath
+						# Install FPM...
+						InstallFPM
+						echo "Confgiuring MySQL"
+						ConfigureFPM
 						exit
 						;;
 					5) exit;;
@@ -301,9 +356,9 @@ do
 			exit
 			;;
 		3) # Run Menu
-			InstallPath
-			InstallMySQL
-			ConfigureMySQL
+			StartMySQL
+			StartPHPFPM
+			StartNGINX
 			exit
 			;;
 		4) exit;;
