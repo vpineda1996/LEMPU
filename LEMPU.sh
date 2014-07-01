@@ -21,9 +21,9 @@ echo ""
 
 # Setup Root Dir
 function InstallPath {
-	if [[ -v LAMPDIRECTORY ]]; then
+	if [[ ! -v LAMPDIRECTORY ]]; then
 		echo "Where do you want me to install?"
-		read -p "Folder: " -e -i $HOME/LEMP $LAMPDIRECTORY
+		read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
 		if [ ! -e $LAMPDIRECTORY ]; then
 			mkdir -p $LAMPDIRECTORY
 		fi
@@ -46,7 +46,7 @@ function InstallNginx {
 # Configure Nginx in $NGDIRECTORY
 # Port Number $PORT
 function ConfigureNginx {
-	if [[ -v NGDIRECTORY ]]; then
+	if [[ ! -v NGDIRECTORY ]]; then
 		echo "Where do you want me to configure Nginx?"
 		read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
 	fi
@@ -110,7 +110,7 @@ function ConfigureNginx {
 	fi
 	read -p "Do you want PHP & nginx?[y/n]: " -e -i y NGINXPHP
 	if [ $NGINXPHP = 'y' ]; then
-		if [[ -v PHPFPMIRECTORY ]]; then
+		if [[ ! -v PHPFPMIRECTORY ]]; then
 			echo "What is the folder where PHP's socket is?"
 			read -p "Folder" -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 		fi
@@ -131,7 +131,7 @@ function CheckConfigNginx {
 	if [ ! -e $HOME/.config/nginx/ ]; then
 		ConfigureNginx
 	else
-	read -p "You have a installation of nginx in $HOME/.config/nginx/, do you want me to erase it? [y/n]" -e -i n $ERASENGINX
+	read -p "You have a installation of nginx in $HOME/.config/nginx/, do you want me to erase it? [y/n]" -e -i n ERASENGINX
 	if [ $ERASENGINX = 'y' ]; then
 		rm -r $HOME/.config/nginx
 	fi
@@ -163,7 +163,7 @@ function InstallMySQL {
 # socket @ $MYSQLDIRECTORY/socket.sock
 # checar como inicializar MySQL
 function ConfigureMySQL {
-	if [[ -v MYSQLDIRECTORY ]]; then
+	if [[ ! -v MYSQLDIRECTORY ]]; then
 		echo "Where do you want me to configure MySQL?"
 		read -p "Folder: " -e -i $HOME/.config/mysql MYSQLDIRECTORY
 	fi
@@ -189,7 +189,7 @@ function ConfigureMySQL {
 function InstallFPM {
 	echo "Installing PHP-FPM"
 	sleep 1
-	if [[ -v PHPFPMIRECTORY ]]; then
+	if [[ ! -v PHPFPMIRECTORY ]]; then
 		echo "Where do you want me to configure PHP-FPM?"
 		read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 	fi
@@ -216,7 +216,7 @@ function InstallFPM {
 }
 
 function ConfigureFPM {
-	if [[ -v PHPFPMIRECTORY ]]; then
+	if [[ ! -v PHPFPMIRECTORY ]]; then
 		echo "Where do you want me to configure PHP-FPM?"
 		read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 	fi
@@ -272,7 +272,8 @@ do
 			echo "1) Install and configure all"
 			echo "2) Install and Configure Nginx"
 			echo "3) Install and Configure MySQL"
-			echo "4) Install and Configure PHP-FPM"				echo "5) Exit"
+			echo "4) Install and Configure PHP-FPM"				
+			echo "5) Exit"
 			echo ""
 			read -p "Select an option [1-5]: " setupOption
 			case $setupOption in
@@ -326,17 +327,17 @@ do
 			echo "3) Install and Configure PHP-FPM"
 			echo "4) Exit"
 			echo ""
-			read -p "Select an option [1-4]: " setupOption
-			case $setupOption in
+			read -p "Select an option [1-4]: " setupOption1
+			case $setupOption1 in
 				1) # Configure Nginx
 					echo "Confgiuring Nginx"
 					CheckConfigNginx
 					exit
 					;;
 				2) # Configure MySQL
-					if [[ -v LAMPDIRECTORY ]]; then
+					if [[ ! -v LAMPDIRECTORY ]]; then
 						echo "Where is MySQL installed?"
-						read -p "Folder: " -e -i $HOME/LEMP $LAMPDIRECTORY
+						read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
 					fi
 					ConfigureMySQL
 					exit
