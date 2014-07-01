@@ -321,34 +321,32 @@ do
 			exit
 			;;
 		2) # Configure menu
-			do
-				echo "1) Install and Configure Nginx"
-				echo "2) Install and Configure MySQL"
-				echo "3) Install and Configure PHP-FPM"
-				echo "4) Exit"
-				echo ""
-				read -p "Select an option [1-4]: " setupOption
-				case $setupOption in
-					1) # Configure Nginx
-						echo "Confgiuring Nginx"
-						CheckConfigNginx
-						exit
-						;;
-					2) # Configure MySQL
-						if [[ -v LAMPDIRECTORY ]]; then
-							echo "Where is MySQL installed?"
-							read -p "Folder: " -e -i $HOME/LEMP $LAMPDIRECTORY
-						fi
-						ConfigureMySQL
-						exit
-						;;
-					3) # Configure PHP --missing
-						
-						exit
-						;;
-					4) exit;;
-				esac
-			done
+			echo "1) Install and Configure Nginx"
+			echo "2) Install and Configure MySQL"
+			echo "3) Install and Configure PHP-FPM"
+			echo "4) Exit"
+			echo ""
+			read -p "Select an option [1-4]: " setupOption
+			case $setupOption in
+				1) # Configure Nginx
+					echo "Confgiuring Nginx"
+					CheckConfigNginx
+					exit
+					;;
+				2) # Configure MySQL
+					if [[ -v LAMPDIRECTORY ]]; then
+						echo "Where is MySQL installed?"
+						read -p "Folder: " -e -i $HOME/LEMP $LAMPDIRECTORY
+					fi
+					ConfigureMySQL
+					exit
+					;;
+				3) # Configure PHP --missing
+					
+					exit
+					;;
+				4) exit;;
+			esac
 			exit
 			;;
 		3) # Run Menu
