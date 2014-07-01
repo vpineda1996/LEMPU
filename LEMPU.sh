@@ -269,58 +269,55 @@ do
 	read -p "Select an option [1-4]: " option
 	case $option in
 		1) # Setup Menu
-			do
-				echo "1) Install and configure all"
-				echo "2) Install and Configure Nginx"
-				echo "3) Install and Configure MySQL"
-				echo "4) Install and Configure PHP-FPM"
-				echo "5) Exit"
-				echo ""
-				read -p "Select an option [1-5]: " setupOption
-				case $setupOption in
-					1) # Install and configure all
-						InstallPath
-						# Install MySQL...
-						InstallMySQL
-						echo "Confgiuring MySQL"
-						ConfigureMySQL
-						# Install FPM...
-						InstallFPM
-						echo "Confgiuring MySQL"
-						ConfigureFPM
-						# Install Nginx...
-						InstallNginx
-						echo "Confgiuring NGINX"
-						CheckConfigNginx
-						exit
-						;;
-					2) # Install and Configure Nginx
-						InstallPath
-						# Install Nginx...
-						InstallNginx
-						echo "Confgiuring Nginx"
-						CheckConfigNginx
-						exit
-						;;
-					3) # Install and Configure MySQL
-						InstallPath
-						# Install MySQL...
-						InstallMySQL
-						echo "Confgiuring MySQL"
-						ConfigureMySQL
-						exit
-						;;
-					4) # Install and Configure PHP-FPM
-						InstallPath
-						# Install FPM...
-						InstallFPM
-						echo "Confgiuring MySQL"
-						ConfigureFPM
-						exit
-						;;
-					5) exit;;
-				esac
-			done
+			echo "1) Install and configure all"
+			echo "2) Install and Configure Nginx"
+			echo "3) Install and Configure MySQL"
+			echo "4) Install and Configure PHP-FPM"				echo "5) Exit"
+			echo ""
+			read -p "Select an option [1-5]: " setupOption
+			case $setupOption in
+				1) # Install and configure all
+					InstallPath
+					# Install MySQL...
+					InstallMySQL
+					echo "Confgiuring MySQL"
+					ConfigureMySQL
+					# Install FPM...
+					InstallFPM
+					echo "Confgiuring MySQL"
+					ConfigureFPM
+					# Install Nginx...
+					InstallNginx
+					echo "Confgiuring NGINX"
+					CheckConfigNginx
+					exit
+					;;
+				2) # Install and Configure Nginx
+					InstallPath
+					# Install Nginx...
+					InstallNginx
+					echo "Confgiuring Nginx"
+					CheckConfigNginx
+					exit
+					;;
+				3) # Install and Configure MySQL
+					InstallPath
+					# Install MySQL...
+					InstallMySQL
+					echo "Confgiuring MySQL"
+					ConfigureMySQL
+					exit
+					;;
+				4) # Install and Configure PHP-FPM
+					InstallPath
+					# Install FPM...
+					InstallFPM
+					echo "Confgiuring MySQL"
+					ConfigureFPM
+					exit
+					;;
+				5) exit;;
+			esac
 			exit
 			;;
 		2) # Configure menu
