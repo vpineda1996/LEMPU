@@ -40,7 +40,7 @@ function InstallNginx {
 	tar xzf nginx-1.7.2.tar.gz
 	rm nginx-1.7.2.tar.gz
 	cd nginx-1.7.2
-	./configure --prefix=$LAMPDIRECTORY
+	./configure --prefix=$LAMPDIRECTORY --with-ipv6 
 	make
 	make install
 	cd ..
@@ -55,6 +55,7 @@ function ConfigureNginx {
 	fi
 	# Create the home directory
 	mkdir -p $NGDIRECTORY
+	mkdir -p $NGDIRECTORY/tmp
 	# Create files
 	touch $NGDIRECTORY/nginx.conf
 	touch $NGDIRECTORY/error.log
@@ -76,7 +77,9 @@ function ConfigureNginx {
 	echo "    default_type application/octet-stream;" >> $NGDIRECTORY/nginx.conf
 	echo "    access_log $NGDIRECTORY/access.log combined;" >> $NGDIRECTORY/nginx.conf
 	echo "" >> $NGDIRECTORY/nginx.conf
-	echo "    lient_body_temp_path $NGDIRECTORY/tmp/client_body;" >> $NGDIRECTORY/nginx.conf
+	echo "    index    index.html index.htm index.php;" >> $NGDIRECTORY/nginx.conf
+	echo "" >> $NGDIRECTORY/nginx.conf
+	echo "    client_body_temp_path $NGDIRECTORY/tmp/client_body;" >> $NGDIRECTORY/nginx.conf
 	echo "    proxy_temp_path $NGDIRECTORY/tmp/proxy;" >> $NGDIRECTORY/nginx.conf
 	echo "    fastcgi_temp_path $NGDIRECTORY/tmp/fastcgi;" >> $NGDIRECTORY/nginx.conf
 	echo "    uwsgi_temp_path $NGDIRECTORY/tmp/uwsgi;" >> $NGDIRECTORY/nginx.conf
@@ -118,11 +121,15 @@ function ConfigureNginx {
 	if [ $NGINXPHP = 'y' ]; then
 		if [[ ! -v PHPFPMIRECTORY ]]; then
 			echo "What is the folder where PHP's socket is?"
-			read -p "Folder" -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
+			read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 		fi
 		echo "		location ~ \\.php\$ {" >> $NGDIRECTORY/nginx.conf
-    	echo "		include fastcgi_params;" >> $NGDIRECTORY/nginx.conf
-    	echo "		fastcgi_pass unix:$PHPFPMIRECTORY/socket;" >> $NGDIRECTORY/nginx.conf
+    	echo "			include fastcgi_params;" >> $NGDIRECTORY/nginx.conf
+    	echo "			fastcgi_pass unix:$PHPFPMIRECTORY/socket;" >> $NGDIRECTORY/nginx.conf
+    	echo "		}" >> $NGDIRECTORY/nginx.conf
+    	if [ ! -e $NGDIRECTORY/fastcgi_params  ]; then
+			wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/fastcgi_params -q -O $NGDIRECTORY/fastcgi_params
+		fi
     fi
 	echo "    }" >> $NGDIRECTORY/nginx.conf
 	echo "}" >> $NGDIRECTORY/nginx.conf
@@ -130,6 +137,7 @@ function ConfigureNginx {
 	if [ ! -e $NGDIRECTORY/mimes.conf  ]; then
 		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/mimes.conf -q -O $NGDIRECTORY/mimes.conf
 	fi
+
 }
 
 #First check if there is a installation
@@ -169,6 +177,10 @@ function InstallMySQL {
 # socket @ $MYSQLDIRECTORY/socket.sock
 # checar como inicializar MySQL
 function ConfigureMySQL {
+	if [[ ! -v LAMPDIRECTORY ]]; then
+		echo "Where is MySQL installed?"
+		read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+	fi
 	if [[ ! -v MYSQLDIRECTORY ]]; then
 		echo "Where do you want me to configure MySQL?"
 		read -p "Folder: " -e -i $HOME/.config/mysql MYSQLDIRECTORY
@@ -188,7 +200,7 @@ function ConfigureMySQL {
  	$LAMPDIRECTORY/init.d/mysql.server start
  	echo "What passowrd do you want for MySQL root user?"
  	read -p "Password: " -e -i pass MYSQLROOTPASSWORD
- 	$LAMPDIRECTORY/mysql/bin/mysqladmin -u root password '$MYSQLROOTPASSWORD' --socket=$MYSQLDIRECTORY/socket.sock
+ 	$LAMPDIRECTORY/mysql/bin/mysqladmin -u root password $MYSQLROOTPASSWORD --socket=$MYSQLDIRECTORY/socket.sock
 }
 
 # Install php-fpm in $LAMPDIRECTORY  --- incomplete
@@ -199,6 +211,10 @@ function InstallFPM {
 		echo "Where do you want me to configure PHP-FPM?"
 		read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 	fi
+	if [[ ! -v MYSQLDIRECTORY ]]; then
+		echo "Where are MySQL config files located?"
+		read -p "Folder: " -e -i $HOME/.config/mysql MYSQLDIRECTORY
+	fi
 	# Create the PHP-FPM directory
 	if [ ! -e $PHPFPMIRECTORY ]; then
 		mkdir -p $PHPFPMIRECTORY
@@ -207,7 +223,7 @@ function InstallFPM {
 	tar xzf php-5.5.14.tar.gz
 	rm php-5.5.14.tar.gz
 	cd php-5.5.14
-	./configure --prefix=$LAMPDIRECTORY --disable-cgi --enable-fpm --with-pic --with-xmlrpc --enable-sockets --enable-ipv6 --enable-json --with-config-file-path=$PHPFPMIRECTORY --with-config-file-scan-dir=$PHPFPMIRECTORY  --with-mysql=$LAMPDIRECTORY/mysql --with-mysqli=$LAMPDIRECTORY/mysql/bin/mysql_config --with-gd --with-bz2 --with-zlib --enable-mbstring --enable-calendar --enable-bcmath --enable-ftp --enable-exif --enable-zip --enable-gd-native-ttf --with-mysql-sock=$MYSQLDIRECTORY/socket.conf	
+	./configure --prefix=$LAMPDIRECTORY --disable-cgi --enable-fpm --with-pic --with-xmlrpc --enable-sockets --enable-ipv6 --enable-json --with-config-file-path=$PHPFPMIRECTORY --with-config-file-scan-dir=$PHPFPMIRECTORY  --with-mysql=$LAMPDIRECTORY/mysql --with-mysqli=$LAMPDIRECTORY/mysql/bin/mysql_config --with-gd --with-bz2 --with-zlib --enable-mbstring --enable-calendar --enable-bcmath --enable-ftp --enable-exif --enable-zip --enable-gd-native-ttf --with-mysql-sock=$MYSQLDIRECTORY/socket.sock	
 	make
 	make install
 	# Fix prefix in init.d file to start php-fpm
@@ -217,6 +233,7 @@ function InstallFPM {
 		mkdir -p $LAMPDIRECTORY/init.d
 	fi
  	mv sapi/fpm/init.d.php-fpm $LAMPDIRECTORY/init.d/php-fpm
+ 	chmod a+x $LAMPDIRECTORY/init.d/php-fpm
  	cd ..
  	mv php-5.5.14 php_keep
 }
@@ -246,13 +263,10 @@ function ConfigureFPM {
 	echo "pm.start_servers = 1" >> $PHPFPMIRECTORY/conf
 	echo "pm.min_spare_servers = 1" >> $PHPFPMIRECTORY/conf
 	echo "pm.max_spare_servers = 5" >> $PHPFPMIRECTORY/conf
-	if [ ! -e $NGDIRECTORY/fastcgi_params  ]; then
-		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/fastcgi_params -q -O $NGDIRECTORY/fastcgi_params
-	fi
 }
 
 function StartMySQL {
-	$LAMPDIRECTORY/mysql/support-files/mysql.server start
+	$LAMPDIRECTORY/init.d/mysql.server start
 }
 
 function StartPHPFPM {
@@ -262,6 +276,17 @@ function StartPHPFPM {
 function StartNGINX {
 	$LAMPDIRECTORY/sbin/nginx -c $NGDIRECTORY/nginx.conf
 }
+function StopMySQL {
+	$LAMPDIRECTORY/init.d/mysql.server stop
+}
+
+function StopPHPFPM {
+	$LAMPDIRECTORY/init.d/php-fpm stop
+}
+
+function StopNGINX {
+	pkill nginx
+}
 
 while :
 do
@@ -270,98 +295,116 @@ do
 	echo "1) Setup..."
 	echo "2) Configure..."
 	echo "3) Run..."
-	echo "4) Exit"
+	echo "4) Stop..."
+	echo "5) Exit"
 	echo ""
-	read -p "Select an option [1-4]: " option
+	read -p "Select an option [1-5]: " option
 	case $option in
 		1) # Setup Menu
-			echo "1) Install and configure all"
-			echo "2) Install and Configure Nginx"
-			echo "3) Install and Configure MySQL"
-			echo "4) Install and Configure PHP-FPM"				
-			echo "5) Exit"
-			echo ""
-			read -p "Select an option [1-5]: " setupOption
-			case $setupOption in
-				1) # Install and configure all
-					InstallPath
-					# Install MySQL...
-					InstallMySQL
-					echo "Confgiuring MySQL"
-					ConfigureMySQL
-					# Install FPM...
-					InstallFPM
-					echo "Confgiuring MySQL"
-					ConfigureFPM
-					# Install Nginx...
-					InstallNginx
-					echo "Confgiuring NGINX"
-					CheckConfigNginx
-					exit
-					;;
-				2) # Install and Configure Nginx
-					InstallPath
-					# Install Nginx...
-					InstallNginx
-					echo "Confgiuring Nginx"
-					CheckConfigNginx
-					exit
-					;;
-				3) # Install and Configure MySQL
-					InstallPath
-					# Install MySQL...
-					InstallMySQL
-					echo "Confgiuring MySQL"
-					ConfigureMySQL
-					exit
-					;;
-				4) # Install and Configure PHP-FPM
-					InstallPath
-					# Install FPM...
-					InstallFPM
-					echo "Confgiuring MySQL"
-					ConfigureFPM
-					exit
-					;;
-				5) exit;;
-			esac
-			exit
+			while :
+			do
+				echo "1) Install and configure all"
+				echo "2) Install and Configure Nginx"
+				echo "3) Install and Configure MySQL"
+				echo "4) Install and Configure PHP-FPM"				
+				echo "5) Exit"
+				echo ""
+				read -p "Select an option [1-5]: " setupOption
+				case $setupOption in
+					1) # Install and configure all
+						InstallPath
+						# Install MySQL...
+						InstallMySQL
+						echo "Confgiuring MySQL"
+						ConfigureMySQL
+						# Install FPM...
+						InstallFPM
+						echo "Confgiuring MySQL"
+						ConfigureFPM
+						# Install Nginx...
+						InstallNginx
+						echo "Confgiuring NGINX"
+						CheckConfigNginx
+						;;
+					2) # Install and Configure Nginx
+						InstallPath
+						# Install Nginx...
+						InstallNginx
+						echo "Confgiuring Nginx"
+						CheckConfigNginx
+						;;
+					3) # Install and Configure MySQL
+						InstallPath
+						# Install MySQL...
+						InstallMySQL
+						echo "Confgiuring MySQL"
+						ConfigureMySQL
+						;;
+					4) # Install and Configure PHP-FPM
+						InstallPath
+						# Install FPM...
+						InstallFPM
+						echo "Confgiuring MySQL"
+						ConfigureFPM
+						;;
+					5) exit;;
+				esac
+			done
 			;;
 		2) # Configure menu
-			echo "1) Install and Configure Nginx"
-			echo "2) Install and Configure MySQL"
-			echo "3) Install and Configure PHP-FPM"
-			echo "4) Exit"
-			echo ""
-			read -p "Select an option [1-4]: " setupOption1
-			case $setupOption1 in
-				1) # Configure Nginx
-					echo "Confgiuring Nginx"
-					CheckConfigNginx
-					exit
-					;;
-				2) # Configure MySQL
-					if [[ ! -v LAMPDIRECTORY ]]; then
-						echo "Where is MySQL installed?"
-						read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
-					fi
-					ConfigureMySQL
-					exit
-					;;
-				3) # Configure PHP --missing
-					
-					exit
-					;;
-				4) exit;;
-			esac
-			exit
+			while :
+			do
+				echo "1) Configure Nginx"
+				echo "2) Configure MySQL"
+				echo "3) Configure PHP-FPM"
+				echo "4) Exit"
+				echo ""
+				read -p "Select an option [1-4]: " setupOption1
+				case $setupOption1 in
+					1) # Configure Nginx
+						echo "Confgiuring Nginx"
+						CheckConfigNginx
+						;;
+					2) # Configure MySQL
+						if [[ ! -v LAMPDIRECTORY ]]; then
+							echo "Where is MySQL installed?"
+							read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+						fi
+						ConfigureMySQL
+						;;
+					3) # Configure PHP --missing
+						ConfigureFPM
+						;;
+					4) exit;;
+				esac
+			done
 			;;
 		3) # Run Menu
+			if [[ ! -v LAMPDIRECTORY ]]; then
+				echo "Where is everything installed?"
+				read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+			fi
+			if [[ ! -v NGDIRECTORY ]]; then
+				echo "Where is Nginx configuration located?"
+				read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
+			fi
 			StartMySQL
 			StartPHPFPM
 			StartNGINX
-			exit
 			;;
-		4) exit;;
+		4)
+			if [[ ! -v LAMPDIRECTORY ]]; then
+				echo "What is the root installation directory of LAMP?"
+				read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+			fi
+			if [[ ! -v NGDIRECTORY ]]; then
+				echo "Where is Nginx configuration located?"
+				read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
+			fi
+			StopMySQL
+			StopPHPFPM
+			StopNGINX
+			;;
+		5) exit;;
 	esac
 done
