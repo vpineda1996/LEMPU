@@ -214,6 +214,7 @@ function InstallFPM {
 	fi
  	mv sapi/fpm/init.d.php-fpm $LAMPDIRECTORY/init.d/php-fpm
  	cd ..
+ 	mv php-5.5.14 php_keep
 }
 
 function ConfigureFPM {
