@@ -124,8 +124,6 @@ function ConfigureNginx {
 	if [ ! -e $NGDIRECTORY/mimes.conf  ]; then
 		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/mimes.conf -q -O $NGDIRECTORY/mimes.conf
 	fi
-	
- }
 }
 
 #First check if there is a installation
