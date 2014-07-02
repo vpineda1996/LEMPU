@@ -60,9 +60,13 @@ function InstallNginx {
 		mkdir -p $LAMPDIRECTORY/init.d
 	fi
 	wget -q "https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/nginx" -P $LAMPDIRECTORY/init.d/
-	sed -i "s|DAEMON=/usr/local/sbin/nginx|DAEMON=$LAMPDIRECTORY/sbin/nginx|" $LAMPDIRECTORY/init.d/nginx
-	sed -i "s|lockfile=/var/lock/subsys/nginx|lockfile=$NGDIRECTORY/nginx.lock|" $LAMPDIRECTORY/init.d/nginx
-	sed -i "s|NGINX_CONF_FILE=\"/usr/local/nginx/conf/nginx.conf\"|NGINX_CONF_FILE=\"$NGDIRECTORY/nginx.conf\"|" $LAMPDIRECTORY/init.d/nginx
+	sed -i "s|nginx=\"/usr/sbin/nginx\"|DAEMON=$LAMPDIRECTORY/sbin/nginx|" $LAMPDIRECTORY/init.d/nginx
+	#sed -i "s|RUNAS=root|RUNAS=$USER|" $LAMPDIRECTORY/init.d/nginx
+	if [ -e $LAMPDIRECTORY/init.d/nginx ]; then
+		sed -i "s|NGINX_CONF_FILE=\"/etc/nginx/nginx.conf\"|lNGINX_CONF_FILE=\"$NGDIRECTORY/nginx.conf\"|" $LAMPDIRECTORY/init.d/nginx
+		sed -i "s|lockfile=/var/lock/subsys/nginx|lockfile=$NGDIRECTORY/nginx.lock|" $LAMPDIRECTORY/init.d/nginx
+	fi
+	chmod a+x $LAMPDIRECTORY/init.d/nginx
 }
 # Configure Nginx in $NGDIRECTORY
 # Port Number $PORT
@@ -169,7 +173,7 @@ function ConfigureNginx {
 	if [ ! -e $NGDIRECTORY/mimes.conf  ]; then
 		wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/mimes.conf -q -O $NGDIRECTORY/mimes.conf
 	fi
-	if [ ! -e $LAMPDIRECTORY/init.d/nginx ]; then
+	if [ -e $LAMPDIRECTORY/init.d/nginx ]; then
 		sed -i "s|lockfile=/var/lock/subsys/nginx|lockfile=$NGDIRECTORY/nginx.lock|" $LAMPDIRECTORY/init.d/nginx
 		sed -i "s|NGINX_CONF_FILE=\"/usr/local/nginx/conf/nginx.conf\"|NGINX_CONF_FILE=\"$NGDIRECTORY/nginx.conf\"|" $LAMPDIRECTORY/init.d/nginx
 	fi

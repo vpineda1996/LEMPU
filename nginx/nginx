@@ -24,8 +24,6 @@ prog=$(basename $nginx)
  
 NGINX_CONF_FILE="/etc/nginx/nginx.conf"
  
-[ -f /etc/sysconfig/nginx ] && . /etc/sysconfig/nginx
- 
 lockfile=/var/lock/subsys/nginx
  
 make_dirs() {
