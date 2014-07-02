@@ -1,352 +1,129 @@
-#! /bin/sh
-### BEGIN INIT INFO
-# Provides:          nginx
-# Required-Start:    $remote_fs $syslog
-# Required-Stop:     $remote_fs $syslog
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: nginx init.d dash script for Ubuntu <=9.10.
-# Description:       nginx init.d dash script for Ubuntu <=9.10.
-### END INIT INFO
-#------------------------------------------------------------------------------
-# nginx - this Debian Almquist shell (dash) script, starts and stops the nginx 
-#         daemon for ubuntu 9.10 and lesser version numbered releases.
+#!/bin/sh
 #
+# nginx - this script starts and stops the nginx daemon
+#
+# chkconfig:   - 85 15 
 # description:  Nginx is an HTTP(S) server, HTTP(S) reverse \
-#               proxy and IMAP/POP3 proxy server.  This \
-#		script will manage the initiation of the \
-#		server and it's process state.
-#
+#               proxy and IMAP/POP3 proxy server
 # processname: nginx
-# config:      /usr/local/nginx/conf/nginx.conf
-# pidfile:     /acronymlabs/server/nginx.pid
-# Provides:    nginx
-#
-# Author:  Jason Giedymin
-#          <jason.giedymin AT gmail.com>.
-#
-# Version: 2.0 02-NOV-2009 jason.giedymin AT gmail.com
-# Notes: nginx init.d dash script for Ubuntu <=9.10.
-# 
-# This script's project home is:
-# 	http://code.google.com/p/nginx-init-ubuntu/
-#
-#------------------------------------------------------------------------------
-#                               MIT X11 License
-#------------------------------------------------------------------------------
-#
-# Copyright (c) 2009 Jason Giedymin, http://Amuxbit.com formerly
-#				     http://AcronymLabs.com
-#
-# Permission is hereby granted, free of charge, to any person obtaining
-# a copy of this software and associated documentation files (the
-# "Software"), to deal in the Software without restriction, including
-# without limitation the rights to use, copy, modify, merge, publish,
-# distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to
-# the following conditions:
-#
-# The above copyright notice and this permission notice shall be
-# included in all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-# LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-# OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-# WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#------------------------------------------------------------------------------
-
+# config:      /etc/nginx/nginx.conf
+# config:      /etc/sysconfig/nginx
+# pidfile:     /var/run/nginx.pid
  
-#------------------------------------------------------------------------------
-#                               Consts
-#------------------------------------------------------------------------------
-DAEMON=/usr/local/sbin/nginx
+# Source function library.
+. /etc/rc.d/init.d/functions
  
-PS="nginx"
-PIDNAME="nginx"				#lets you do $PS-slave
-PIDFILE=$PIDNAME.pid                    #pid file
-PIDSPATH=/var/run
+# Source networking configuration.
+. /etc/sysconfig/network
  
-DESCRIPTION="Nginx Server..."
+# Check that networking is up.
+[ "$NETWORKING" = "no" ] && exit 0
  
-RUNAS=root                              #user to run as
+nginx="/usr/sbin/nginx"
+prog=$(basename $nginx)
  
-SCRIPT_OK=0                             #ala error codes
-SCRIPT_ERROR=1                          #ala error codes
-TRUE=1                                  #boolean
-FALSE=0                                 #boolean
+NGINX_CONF_FILE="/etc/nginx/nginx.conf"
+ 
+[ -f /etc/sysconfig/nginx ] && . /etc/sysconfig/nginx
  
 lockfile=/var/lock/subsys/nginx
-NGINX_CONF_FILE="/usr/local/nginx/conf/nginx.conf"
  
-#------------------------------------------------------------------------------
-#                               Simple Tests
-#------------------------------------------------------------------------------
- 
-#test if nginx is a file and executable
-test -x $DAEMON || exit 0
-#set exit condition
-#set -e
- 
-#------------------------------------------------------------------------------
-#                               Functions
-#------------------------------------------------------------------------------
- 
-setFilePerms(){
- 
-        if [ -f $PIDSPATH/$PIDFILE ]; then
-                chmod 400 $PIDSPATH/$PIDFILE
-        fi
-}
- 
-configtest() {
-	$DAEMON -t -c $NGINX_CONF_FILE
-}
- 
-getPSCount() {
-	return `pgrep -f $PS | wc -l`
-}
- 
-isRunning() {
-        if [ $1 ]; then
-                pidof_daemon $1
-                PID=$?
- 
-                if [ $PID -gt 0 ]; then
-                        return 1
-                else
-                        return 0
-                fi
-        else
-                pidof_daemon
-                PID=$?
- 
-                if [ $PID -gt 0 ]; then
-                        return 1
-                else
-                        return 0
-                fi
-        fi
-}
- 
-#courtesy of php-fpm
-wait_for_pid () {
-        try=0
- 
-        while test $try -lt 35 ; do
- 
-                case "$1" in
-                        'created')
-                        if [ -f "$2" ] ; then
-                                try=''
-                                break
-                        fi
-                        ;;
- 
-                        'removed')
-                        if [ ! -f "$2" ] ; then
-                                try=''
-                                break
-                        fi
-                        ;;
-                esac
- 
-                #echo -n .
-                try=`expr $try + 1`
-                sleep 1
-        done
-}
- 
-status(){
-	isRunning
-	isAlive=$?
- 
-	if [ "${isAlive}" -eq $TRUE ]; then
-                echo "$PIDNAME found running with processes:  `pidof $PS`"
-        else
-                echo "$PIDNAME is NOT running."
-        fi
- 
- 
-}
- 
-removePIDFile(){
-	if [ $1 ]; then
-                if [ -f $1 ]; then
-        	        rm -f $1
-	        fi
-        else
-		#Do default removal
-		if [ -f $PIDSPATH/$PIDFILE ]; then
-        	        rm -f $PIDSPATH/$PIDFILE
-	        fi
-        fi
+make_dirs() {
+   # make required directories
+   user=`$nginx -V 2>&1 | grep "configure arguments:" | sed 's/[^*]*--user=\([^ ]*\).*/\1/g' -`
+   if [ -z "`grep $user /etc/passwd`" ]; then
+       useradd -M -s /bin/nologin $user
+   fi
+   options=`$nginx -V 2>&1 | grep 'configure arguments:'`
+   for opt in $options; do
+       if [ `echo $opt | grep '.*-temp-path'` ]; then
+           value=`echo $opt | cut -d "=" -f 2`
+           if [ ! -d "$value" ]; then
+               # echo "creating" $value
+               mkdir -p $value && chown -R $user $value
+           fi
+       fi
+   done
 }
  
 start() {
-        log_daemon_msg "Starting $DESCRIPTION"
- 
-	isRunning
-	isAlive=$?
- 
-        if [ "${isAlive}" -eq $TRUE ]; then
-                log_end_msg $SCRIPT_ERROR
-        else
-                start-stop-daemon --start --quiet --chuid $RUNAS --pidfile $PIDSPATH/$PIDFILE --exec $DAEMON \
-                -- -c $NGINX_CONF_FILE
-                setFilePerms
-                log_end_msg $SCRIPT_OK
-        fi
+    [ -x $nginx ] || exit 5
+    [ -f $NGINX_CONF_FILE ] || exit 6
+    make_dirs
+    echo -n $"Starting $prog: "
+    daemon $nginx -c $NGINX_CONF_FILE
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
 }
  
 stop() {
-	log_daemon_msg "Stopping $DESCRIPTION"
+    echo -n $"Stopping $prog: "
+    killproc $prog -QUIT
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && rm -f $lockfile
+    return $retval
+}
  
-	isRunning
-	isAlive=$?
-        if [ "${isAlive}" -eq $TRUE ]; then
-                start-stop-daemon --stop --quiet --pidfile $PIDSPATH/$PIDFILE
- 
-		wait_for_pid 'removed' $PIDSPATH/$PIDFILE
- 
-                if [ -n "$try" ] ; then
-                        log_end_msg $SCRIPT_ERROR
-                else
-                        removePIDFile
-	                log_end_msg $SCRIPT_OK
-                fi
- 
-        else
-                log_end_msg $SCRIPT_ERROR
-        fi
+restart() {
+    configtest || return $?
+    stop
+    sleep 1
+    start
 }
  
 reload() {
-	configtest || return $?
- 
-	log_daemon_msg "Reloading (via HUP) $DESCRIPTION"
- 
-        isRunning
-        if [ $? -eq $TRUE ]; then
-		`killall -HUP $PS` #to be safe
- 
-                log_end_msg $SCRIPT_OK
-        else
-                log_end_msg $SCRIPT_ERROR
-        fi
+    configtest || return $?
+    echo -n $"Reloading $prog: "
+    killproc $nginx -HUP
+    RETVAL=$?
+    echo
 }
  
-quietupgrade() {
-	log_daemon_msg "Peforming Quiet Upgrade $DESCRIPTION"
- 
-        isRunning
-        isAlive=$?
-        if [ "${isAlive}" -eq $TRUE ]; then
-		kill -USR2 `cat $PIDSPATH/$PIDFILE`
-		kill -WINCH `cat $PIDSPATH/$PIDFILE.oldbin`
- 
-		isRunning
-		isAlive=$?
-		if [ "${isAlive}" -eq $TRUE ]; then
-			kill -QUIT `cat $PIDSPATH/$PIDFILE.oldbin`
-			wait_for_pid 'removed' $PIDSPATH/$PIDFILE.oldbin
-                        removePIDFile $PIDSPATH/$PIDFILE.oldbin
- 
-			log_end_msg $SCRIPT_OK
-		else
-			log_end_msg $SCRIPT_ERROR
- 
-			log_daemon_msg "ERROR! Reverting back to original $DESCRIPTION"
- 
-			kill -HUP `cat $PIDSPATH/$PIDFILE`
-			kill -TERM `cat $PIDSPATH/$PIDFILE.oldbin`
-			kill -QUIT `cat $PIDSPATH/$PIDFILE.oldbin`
- 
-			wait_for_pid 'removed' $PIDSPATH/$PIDFILE.oldbin
-                        removePIDFile $PIDSPATH/$PIDFILE.oldbin
- 
-			log_end_msg $SCRIPT_ok
-		fi
-        else
-                log_end_msg $SCRIPT_ERROR
-        fi
+force_reload() {
+    restart
 }
  
-terminate() {
-        log_daemon_msg "Force terminating (via KILL) $DESCRIPTION"
- 
-	PIDS=`pidof $PS` || true
- 
-	[ -e $PIDSPATH/$PIDFILE ] && PIDS2=`cat $PIDSPATH/$PIDFILE`
- 
-	for i in $PIDS; do
-		if [ "$i" = "$PIDS2" ]; then
-	        	kill $i
-                        wait_for_pid 'removed' $PIDSPATH/$PIDFILE
-			removePIDFile
-		fi
-	done
- 
-	log_end_msg $SCRIPT_OK
+configtest() {
+  $nginx -t -c $NGINX_CONF_FILE
 }
  
-destroy() {
-	log_daemon_msg "Force terminating and may include self (via KILLALL) $DESCRIPTION"
-	killall $PS -q >> /dev/null 2>&1
-	log_end_msg $SCRIPT_OK
+rh_status() {
+    status $prog
 }
  
-pidof_daemon() {
-    PIDS=`pidof $PS` || true
- 
-    [ -e $PIDSPATH/$PIDFILE ] && PIDS2=`cat $PIDSPATH/$PIDFILE`
- 
-    for i in $PIDS; do
-        if [ "$i" = "$PIDS2" ]; then
-            return 1
-        fi
-    done
-    return 0
+rh_status_q() {
+    rh_status >/dev/null 2>&1
 }
  
 case "$1" in
-  start)
-	start
-        ;;
-  stop)
-	stop
-        ;;
-  restart|force-reload)
-	stop
-	sleep 1
-	start
-        ;;
-  reload)
-	$1
-	;;
-  status)
-	status
-	;;
-  configtest)
+    start)
+        rh_status_q && exit 0
         $1
         ;;
-  quietupgrade)
-	$1
-	;;
-  terminate)
-	$1
-	;;
-  destroy)
-	$1
-	;;
-  *)
-	FULLPATH=/etc/init.d/$PS
-	echo "Usage: $FULLPATH {start|stop|restart|force-reload|status|configtest|quietupgrade|terminate|destroy}"
-	echo "       The 'destroy' command should only be used as a last resort." 
-	exit 1
-	;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart|configtest)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+            ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload|configtest}"
+        exit 2
 esac
- 
-exit 0
