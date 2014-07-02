@@ -5,7 +5,6 @@
 # @param HOME = Defualt user home directory
 # @param LAMPDIRECTORY = Install directory
 # @param NGDIRECTORY = Configuration dir for nginx
-# @param ERASENGINX = Erase previous nginx configuration files at $HOME/.config/nginx/
 # @param MYSQLDIRECTORY = Configuration dir for MySQL
 # @param MYSQLROOTPASSWORD = MySQL root Password
 # @param PHPFPMIRECTORY = Configuration dir for PHP-FPM
@@ -19,17 +18,29 @@ echo 'Welcome to this quick LEMP installer'
 echo ""
 echo "I need to ask you a few questions before starting the setup"
 echo "You can leave the default options and just press enter if you are ok with them"
+echo "Once intalled is recommended you dont delete this file as it contains your"
+echo "instalation directories."
 echo ""
+# Know my name so I can change myself
+SCRIPTNAME=`basename $0`
 
+# Don't modify this lines as the script will change them
+#replacethislineforlampdirectory
+#replacethislineforngdirectory
+#replacethislinefornginxport
+#replacethislinefornginxrootdir
+#replacethislineformysqldirectory
+#replacethislineforphpfpmdirectory
 
 # Setup Root Dir
 function InstallPath {
 	if [[ ! -v LAMPDIRECTORY ]]; then
 		echo "Where do you want me to install?"
 		read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
-		if [ ! -e $LAMPDIRECTORY ]; then
-			mkdir -p $LAMPDIRECTORY
-		fi
+		sed -i "s|#replacethislineforlampdirectory|LAMPDIRECTORY=$LAMPDIRECTORY|" $PWD/$SCRIPTNAME
+	fi
+	if [ ! -e $LAMPDIRECTORY ]; then
+		mkdir -p $LAMPDIRECTORY
 	fi
 }
 # Install and build in $LAMPDIRECTORY
@@ -52,6 +63,7 @@ function ConfigureNginx {
 	if [[ ! -v NGDIRECTORY ]]; then
 		echo "Where do you want me to configure Nginx?"
 		read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
+		sed -i "s|#replacethislineforngdirectory|NGDIRECTORY=$NGDIRECTORY|" $PWD/$SCRIPTNAME
 	fi
 	# Create the home directory
 	mkdir -p $NGDIRECTORY
@@ -65,6 +77,7 @@ function ConfigureNginx {
 	read -p "Port: " -e -i $PORT USERPORT
 	if [ $USERPORT != "" ]; then
 		PORT=$USERPORT
+		sed -i "s|#replacethislinefornginxport|PORT=$PORT|" $PWD/$SCRIPTNAME
 	fi
 	# Echo configuration to nginx conf file
 	echo "# nginx.conf" >> $NGDIRECTORY/nginx.conf
@@ -98,12 +111,16 @@ function ConfigureNginx {
 	echo "        listen ${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv4
 	echo "        listen [::]:${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv6
 	echo "        autoindex on;" >> $NGDIRECTORY/nginx.conf #this is the file list
-	# Check if user wants authentication services
-	read -p "Where do you want your root directory?: " -e -i /home/$USER/files/ NGROOTDIR
+	# Where will I put the root directory?
+	if [[ ! -v NGROOTDIR ]]; then
+		read -p "Where do you want your root directory?: " -e -i /home/$USER/files/ NGROOTDIR
+		sed -i "s|#replacethislinefornginxrootdir|NGROOTDIR=$NGROOTDIR|" $PWD/$SCRIPTNAME
+	fi
 	if [ ! -e $NGROOTDIR ]; then
 		mkdir -p $NGROOTDIR
 	fi
 	echo "        root $NGROOTDIR;" >> $NGDIRECTORY/nginx.conf #path you want to share
+	# Check if user wants authentication services
 	read -p "Do you want authentication services?[y/n]: " -e -i y AUTHSERVICES
 	if [ $AUTHSERVICES = 'y' ]; then
 		echo "        auth_basic \"Please enter your credentials\";" >> $NGDIRECTORY/nginx.conf
@@ -184,6 +201,7 @@ function ConfigureMySQL {
 	if [[ ! -v MYSQLDIRECTORY ]]; then
 		echo "Where do you want me to configure MySQL?"
 		read -p "Folder: " -e -i $HOME/.config/mysql MYSQLDIRECTORY
+		sed -i "s|#replacethislineformysqldirectory|MYSQLDIRECTORY=$MYSQLDIRECTORY|" $PWD/$SCRIPTNAME
 	fi
 	# Create the MySQL directory
 	if [ ! -e $MYSQLDIRECTORY ]; then
@@ -210,6 +228,7 @@ function InstallFPM {
 	if [[ ! -v PHPFPMIRECTORY ]]; then
 		echo "Where do you want me to configure PHP-FPM?"
 		read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
+		sed -i "s|#replacethislineforphpfpmdirectory|PHPFPMIRECTORY=$PHPFPMIRECTORY|" $PWD/$SCRIPTNAME
 	fi
 	if [[ ! -v MYSQLDIRECTORY ]]; then
 		echo "Where are MySQL config files located?"
@@ -290,19 +309,21 @@ function StopNGINX {
 
 while :
 do
+	clear
 	echo "What do you want to do?"
 	echo ""
 	echo "1) Setup..."
 	echo "2) Configure..."
 	echo "3) Run..."
 	echo "4) Stop..."
+	echo "5) Install websites"
 	echo "5) Exit"
 	echo ""
 	read -p "Select an option [1-5]: " option
 	case $option in
 		1) # Setup Menu
-			while :
-			do
+				clear
+				echo ""
 				echo "1) Install and configure all"
 				echo "2) Install and Configure Nginx"
 				echo "3) Install and Configure MySQL"
@@ -347,13 +368,13 @@ do
 						echo "Confgiuring MySQL"
 						ConfigureFPM
 						;;
-					5) exit;;
+					5) 
+						;;
 				esac
-			done
 			;;
 		2) # Configure menu
-			while :
-			do
+				clear
+				echo ""
 				echo "1) Configure Nginx"
 				echo "2) Configure MySQL"
 				echo "3) Configure PHP-FPM"
@@ -375,36 +396,43 @@ do
 					3) # Configure PHP --missing
 						ConfigureFPM
 						;;
-					4) exit;;
+					4) 
+						;;
 				esac
-			done
 			;;
 		3) # Run Menu
 			if [[ ! -v LAMPDIRECTORY ]]; then
 				echo "Where is everything installed?"
 				read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+				sed -i "s|#replacethislineforlampdirectory|LAMPDIRECTORY=$LAMPDIRECTORY|" $PWD/$SCRIPTNAME
 			fi
 			if [[ ! -v NGDIRECTORY ]]; then
 				echo "Where is Nginx configuration located?"
 				read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
+				sed -i "s|#replacethislineforngdirectory|NGDIRECTORY=$NGDIRECTORY|" $PWD/$SCRIPTNAME
 			fi
 			StartMySQL
 			StartPHPFPM
 			StartNGINX
 			;;
-		4)
+		4) # Stop Menu
 			if [[ ! -v LAMPDIRECTORY ]]; then
 				echo "What is the root installation directory of LAMP?"
 				read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+				sed -i "s|#replacethislineforlampdirectory|LAMPDIRECTORY=$LAMPDIRECTORY|" $PWD/$SCRIPTNAME
 			fi
 			if [[ ! -v NGDIRECTORY ]]; then
 				echo "Where is Nginx configuration located?"
 				read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
+				sed -i "s|#replacethislineforngdirectory|NGDIRECTORY=$NGDIRECTORY|" $PWD/$SCRIPTNAME
 			fi
 			StopMySQL
 			StopPHPFPM
 			StopNGINX
 			;;
-		5) exit;;
+		5) 
+			
+			;;
+		6) exit;;
 	esac
 done
