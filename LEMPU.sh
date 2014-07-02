@@ -519,14 +519,16 @@ do
 					read -n1 -p "Do you want to install in MYSQL? [y,n]" doit 
 					case $doit in  
 						y|Y) 
+							echo ""
 							if [[ ! -v OWNCLOUDDB ]]; then
 								read -p "What do you want your Owncloud Database to be named? " -e -i owncloud OWNCLOUDDB
 							fi
+							echo "What's your MySQL password for $MYSQLUSERNAME?"
+							$LAMPDIRECTORY/mysql/bin/mysql -u $MYSQLUSERNAME -p -e "CREATE DATABASE $OWNCLOUDDB" --socket=$MYSQLDIRECTORY/socket.sock
 							echo "Database Name: $OWNCLOUDDB"
 							echo "Database User: $MYSQLUSERNAME"
 							echo "Database Password: $MYSQLROOTPASSWORD"
 							echo "Database Host: localhost:$MYSQLDIRECTORY/socket.sock"
-							$LAMPDIRECTORY/mysql/bin/mysql -u $MYSQLUSERNAME -p -e "CREATE DATABASE $OWNCLOUDDB" --socket=$MYSQLDIRECTORY/socket.sock
 							;; 
 						n|N) echo "Will not use MySQL" ;; 
 						*) echo "Error! User didn't specify option" ;; 
