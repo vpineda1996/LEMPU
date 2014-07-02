@@ -502,7 +502,7 @@ do
 					wget -q "http://downloads.sourceforge.net/project/phpmyadmin/phpMyAdmin/4.2.5/phpMyAdmin-4.2.5-all-languages.tar.gz?r=http%3A%2F%2Fwww.phpmyadmin.net%2Fhome_page%2Fdownloads.php&ts=1404334987&use_mirror=iweb" -O phpMyAdmin-4.2.5-all-languages.tar.gz
 					tar xzf phpMyAdmin-4.2.5-all-languages.tar.gz
 					rm phpMyAdmin-4.2.5-all-languages.tar.gz
-					mv hpMyAdmin-4.2.5-all-languages phpmyadmin
+					mv phpMyAdmin-4.2.5-all-languages phpmyadmin
 					sed -i '/# Placeholder for phpMyAdmin/ a\        location /phpMyAdmin {\n            rewrite ^/\* /phpmyadmin last;\n        }' $NGDIRECTORY/nginx.conf
 					StopNGINX
 					sleep 1
