@@ -490,6 +490,7 @@ do
 					sed -i "s|username_here|$MYSQLUSERNAME|" wp-config.php
 					sed -i "s|password_here|$MYSQLROOTPASSWORD|" wp-config.php
 					sed -i "s|localhost|:$MYSQLDIRECTORY/socket.sock|" wp-config.php
+					echo "What's your MySQL password for $MYSQLUSERNAME?"
 					$LAMPDIRECTORY/mysql/bin/mysql -u $MYSQLUSERNAME -p -e "CREATE DATABASE $WORDPRESSDB" --socket=$MYSQLDIRECTORY/socket.sock
 					echo "You can access your phpMyAdmin istance from: server.com/wordpress"
 					StopNGINX
