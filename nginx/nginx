@@ -87,12 +87,6 @@ NGINX_CONF_FILE="/usr/local/nginx/conf/nginx.conf"
  
 #test if nginx is a file and executable
 test -x $DAEMON || exit 0
- 
-# Include nginx defaults if available
-if [ -f /etc/default/nginx ] ; then
-        . /etc/default/nginx
-fi
- 
 #set exit condition
 #set -e
  
