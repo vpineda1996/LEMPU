@@ -110,7 +110,7 @@ function ConfigureNginx {
 	echo "    server {" >> $NGDIRECTORY/nginx.conf
 	echo "        listen ${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv4
 	echo "        listen [::]:${PORT} default;" >> $NGDIRECTORY/nginx.conf #IPv6
-	echo "        autoindex on;" >> $NGDIRECTORY/nginx.conf #this is the file list
+	echo "        # autoindex on;" >> $NGDIRECTORY/nginx.conf #this is the file list
 	# Where will I put the root directory?
 	if [[ ! -v NGROOTDIR ]]; then
 		read -p "Where do you want your root directory?: " -e -i /home/$USER/files/ NGROOTDIR
@@ -140,14 +140,22 @@ function ConfigureNginx {
 			echo "What is the folder where PHP's socket is?"
 			read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 		fi
-		echo "		location ~ \\.php\$ {" >> $NGDIRECTORY/nginx.conf
+		echo "		location ~ ^(.+?\.php)(/.*)?\$ {" >> $NGDIRECTORY/nginx.conf
+		echo "			try_files \$1 = 404;" >> $NGDIRECTORY/nginx.conf
     	echo "			include fastcgi_params;" >> $NGDIRECTORY/nginx.conf
+    	echo "			fastcgi_param SCRIPT_FILENAME \$document_root\$1;" >> $NGDIRECTORY/nginx.conf
+    	echo "			fastcgi_param PATH_INFO \$2;" >> $NGDIRECTORY/nginx.conf
     	echo "			fastcgi_pass unix:$PHPFPMIRECTORY/socket;" >> $NGDIRECTORY/nginx.conf
     	echo "		}" >> $NGDIRECTORY/nginx.conf
     	if [ ! -e $NGDIRECTORY/fastcgi_params  ]; then
 			wget https://raw.githubusercontent.com/vpineda1996/LEMPU/master/nginx/fastcgi_params -q -O $NGDIRECTORY/fastcgi_params
 		fi
     fi
+    echo "        # Placeholder for Owncloud" >> $NGDIRECTORY/nginx.conf
+    echo "" >> $NGDIRECTORY/nginx.conf
+    echo "        # Placeholder for phpMyAdmin" >> $NGDIRECTORY/nginx.conf
+    echo "" >> $NGDIRECTORY/nginx.conf
+    echo "        # Placeholder for RoundCube" >> $NGDIRECTORY/nginx.conf
 	echo "    }" >> $NGDIRECTORY/nginx.conf
 	echo "}" >> $NGDIRECTORY/nginx.conf
 	# Create mime file if it doesn't exist
@@ -242,7 +250,7 @@ function InstallFPM {
 	tar xzf php-5.5.14.tar.gz
 	rm php-5.5.14.tar.gz
 	cd php-5.5.14
-	./configure --prefix=$LAMPDIRECTORY --disable-cgi --enable-fpm --with-pic --with-xmlrpc --enable-sockets --enable-ipv6 --enable-json --with-config-file-path=$PHPFPMIRECTORY --with-config-file-scan-dir=$PHPFPMIRECTORY  --with-mysql=$LAMPDIRECTORY/mysql --with-mysqli=$LAMPDIRECTORY/mysql/bin/mysql_config --with-gd --with-bz2 --with-zlib --enable-mbstring --enable-calendar --enable-bcmath --enable-ftp --enable-exif --enable-zip --enable-gd-native-ttf --with-mysql-sock=$MYSQLDIRECTORY/socket.sock	
+	./configure --prefix=$LAMPDIRECTORY --disable-cgi --enable-fpm --with-pdo-mysql --with-mcrypt --enable-intl --with-pic --with-xmlrpc --with-curl --enable-sockets --enable-ipv6 --enable-json --with-config-file-path=$PHPFPMIRECTORY --with-config-file-scan-dir=$PHPFPMIRECTORY  --with-mysql=$LAMPDIRECTORY/mysql --with-mysqli=$LAMPDIRECTORY/mysql/bin/mysql_config --with-gd --with-bz2 --with-zlib --enable-mbstring --enable-calendar --enable-bcmath --enable-ftp --enable-exif --enable-zip --enable-gd-native-ttf --with-mysql-sock=$MYSQLDIRECTORY/socket.sock	
 	make
 	make install
 	# Fix prefix in init.d file to start php-fpm
@@ -307,9 +315,36 @@ function StopNGINX {
 	pkill nginx
 }
 
+function CheckVars {
+	if [[ ! -v MYSQLUSERNAME ]]; then
+		read -p "What's your MySQL username? " -e -i root MYSQLUSERNAME
+	fi
+	if [[ ! -v MYSQLROOTPASSWORD ]]; then
+		read -p "What's your MySQL password for $MYSQLUSERNAME? " -e -i pass MYSQLROOTPASSWORD
+	fi
+	if [[ ! -v LAMPDIRECTORY ]]; then
+		echo "What is the root installation directory of LAMP?"
+		read -p "Folder: " -e -i $HOME/LEMP LAMPDIRECTORY
+		sed -i "s|#replacethislineforlampdirectory|LAMPDIRECTORY=$LAMPDIRECTORY|" $PWD/$SCRIPTNAME
+	fi
+	if [[ ! -v NGROOTDIR ]]; then
+		read -p "Where's Nginx root dir located? " -e -i /home/$USER/files/ NGROOTDIR
+		sed -i "s|#replacethislinefornginxrootdir|NGROOTDIR=$NGROOTDIR|" $PWD/$SCRIPTNAME
+	fi
+	if [[ ! -v MYSQLDIRECTORY ]]; then
+		echo "Where is MySQL socket?"
+		read -p "Folder: " -e -i $HOME/.config/mysql MYSQLDIRECTORY
+		sed -i "s|#replacethislineformysqldirectory|MYSQLDIRECTORY=$MYSQLDIRECTORY|" $PWD/$SCRIPTNAME
+	fi
+	if [[ ! -v NGDIRECTORY ]]; then
+		echo "Where is Nginx config directory?"
+		read -p "Folder: " -e -i $HOME/.config/nginx NGDIRECTORY
+		sed -i "s|#replacethislineforngdirectory|NGDIRECTORY=$NGDIRECTORY|" $PWD/$SCRIPTNAME
+	fi
+}
+
 while :
 do
-	clear
 	echo "What do you want to do?"
 	echo ""
 	echo "1) Setup..."
@@ -317,12 +352,12 @@ do
 	echo "3) Run..."
 	echo "4) Stop..."
 	echo "5) Install websites"
-	echo "5) Exit"
+	echo "6) Exit"
 	echo ""
-	read -p "Select an option [1-5]: " option
+	read -p "Select an option [1-6]: " option
 	case $option in
 		1) # Setup Menu
-				clear
+				echo "Setup..."
 				echo ""
 				echo "1) Install and configure all"
 				echo "2) Install and Configure Nginx"
@@ -373,7 +408,7 @@ do
 				esac
 			;;
 		2) # Configure menu
-				clear
+				echo "Configure..."
 				echo ""
 				echo "1) Configure Nginx"
 				echo "2) Configure MySQL"
@@ -430,8 +465,80 @@ do
 			StopPHPFPM
 			StopNGINX
 			;;
-		5) 
-			
+		5) # Install websites
+			echo "Install websites"
+			echo ""
+			echo "1) Install Wordpress"
+			echo "2) Install phpMyAdmin"
+			echo "3) Install ownCloud"
+			echo "4) Exit"				
+			echo ""
+			read -p "Select an option [1-4]: " setupOption2
+			case $setupOption2 in
+				1) #Install Wordpress
+					CheckVars
+					cd $NGROOTDIR
+					wget -q http://wordpress.org/latest.tar.gz
+					tar xzf latest.tar.gz
+					rm latest.tar.gz
+					cd wordpress
+					cp wp-config-sample.php wp-config.php
+					if [[ ! -v WORDPRESSDB ]]; then
+						read -p "What do you want your Wordpress Database to be named? " -e -i wordpress WORDPRESSDB
+					fi
+					sed -i "s|database_name_here|$WORDPRESSDB|" wp-config.php
+					sed -i "s|username_here|$MYSQLUSERNAME|" wp-config.php
+					sed -i "s|password_here|$MYSQLROOTPASSWORD|" wp-config.php
+					sed -i "s|localhost|:$MYSQLDIRECTORY/socket.sock|" wp-config.php
+					$LAMPDIRECTORY/mysql/bin/mysql -u $MYSQLUSERNAME -p -e "CREATE DATABASE $WORDPRESSDB" --socket=$MYSQLDIRECTORY/socket.sock
+					echo "You can access your phpMyAdmin istance from: server.com/wordpress"
+					StopNGINX
+					sleep 1
+					StartNGINX
+					;;
+				2) #Install phpMyAdmin
+					CheckVars
+					cd $NGROOTDIR
+					wget -q "http://downloads.sourceforge.net/project/phpmyadmin/phpMyAdmin/4.2.5/phpMyAdmin-4.2.5-all-languages.tar.gz?r=http%3A%2F%2Fwww.phpmyadmin.net%2Fhome_page%2Fdownloads.php&ts=1404334987&use_mirror=iweb" -O phpMyAdmin-4.2.5-all-languages.tar.gz
+					tar xzf phpMyAdmin-4.2.5-all-languages.tar.gz
+					rm phpMyAdmin-4.2.5-all-languages.tar.gz
+					mv hpMyAdmin-4.2.5-all-languages phpmyadmin
+					sed -i '/# Placeholder for phpMyAdmin/ a\        location /phpMyAdmin {\n            rewrite ^/\* /phpmyadmin last;\n        }' $NGDIRECTORY/nginx.conf
+					StopNGINX
+					sleep 1
+					StartNGINX
+					echo "You can access your phpMyAdmin istance from: server.com/phpmyadmin"
+					;;
+				3) #Install ownCloud
+					CheckVars
+					cd $NGROOTDIR
+					wget -q "https://download.owncloud.org/community/owncloud-6.0.4.tar.bz2" -O owncloud-6.0.4.tar.bz2
+					tar jxf owncloud-6.0.4.tar.bz2
+					rm owncloud-6.0.4.tar.bz2
+					read -n1 -p "Do you want to install in MYSQL? [y,n]" doit 
+					case $doit in  
+						y|Y) 
+							if [[ ! -v OWNCLOUDDB ]]; then
+								read -p "What do you want your Owncloud Database to be named? " -e -i owncloud OWNCLOUDDB
+							fi
+							echo "Database Name: $OWNCLOUDDB"
+							echo "Database User: $MYSQLUSERNAME"
+							echo "Database Password: $MYSQLROOTPASSWORD"
+							echo "Database Host: localhost:$MYSQLDIRECTORY/socket.sock"
+							$LAMPDIRECTORY/mysql/bin/mysql -u $MYSQLUSERNAME -p -e "CREATE DATABASE $OWNCLOUDDB" --socket=$MYSQLDIRECTORY/socket.sock
+							;; 
+						n|N) echo "Will not use MySQL" ;; 
+						*) echo "Error! User didn't specify option" ;; 
+					esac
+					sed -i '/# Placeholder for Owncloud/ a\        location /owncloud {\n            error_page 403 = owncloud/core/templates/403.php;\n            error_page 404 = owncloud/core/templates/404.php;\n\n            rewrite ^/owncloud/caldav(.\*)\$ /remote.php/caldav\$1 redirect;\n            rewrite ^/owncloud/carddav(.\*)\$ /remote.php/carddav\$1 redirect;\n            rewrite ^/owncloud/webdav(.*)$ /remote.php/webdav$1 redirect;\n\n            location = /owncloud/robots.txt {\n                allow all;\n                log_not_found off;\n                access_log off;\n            }\n\n            location /owncloud/ {\n                # The following 2 rules are only needed with webfinger\n                rewrite ^/.well-known/host-meta /public.php?service=host-meta last;\n                rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json last;\n\n                rewrite ^/.well-known/carddav /remote.php/carddav/ redirect;\n                rewrite ^/.well-known/caldav /remote.php/caldav/ redirect;\n\n                rewrite ^(/core/doc/[^\\/]+/)\$ \$1/index.html;\n\n                try_files \$uri \$uri/ index.php;\n            }\n\n            location ~ ^/owncloud/(data|config|\.ht|db_structure\.xml|README) {\n                deny all;\n            }\n        }\n        location /ownCloud {\n            rewrite ^/\* /owncloud last;\n        }' $NGDIRECTORY/nginx.conf
+					StopNGINX
+					sleep 1
+					StartNGINX
+					echo "You can access your phpMyAdmin istance from: server.com/owncloud"
+					;;
+				4) #Exit
+					;;	
+			esac
 			;;
 		6) exit;;
 	esac
