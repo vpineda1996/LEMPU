@@ -7,5 +7,9 @@ Script to install LEMP or LAMP (Nginx, MySQL, PHP) in Userland.  It isn't bullet
 Run the script and follow the assistant:
 `mkdir installLEMPU;cd installLEMPU; wget -q http://git.io/2j2s6g --no-check-certificate -O LEMPU.sh; chmod +x LEMPU.sh; ./LEMPU.sh`
 
-###Whatbox
+###Dependencies
+- You must be able to complie as user. Most seedbox providers who support ssh login have compilers.
+- If you intent to use authentication services with NGINX you must be able to run crypt. This command comes with mcrypt directory, else it isn't necesary.
+
+####Whatbox
 This runs out of the box to Whatbox.ca users.
