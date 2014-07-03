@@ -272,9 +272,12 @@ function ConfigureFPM {
 		echo "Where do you want me to configure PHP-FPM?"
 		read -p "Folder: " -e -i $HOME/.config/php-fpm PHPFPMIRECTORY
 	fi
-	# Create the PHP-FPM directory
+	# Create PHP-FPM necesary directory
 	if [ ! -e $PHPFPMIRECTORY ]; then
 		mkdir -p $PHPFPMIRECTORY
+	fi
+	if [ ! -e $PHPFPMIRECTORY/session ]; then
+		mkdir -p $PHPFPMIRECTORY/session
 	fi
 	touch $PHPFPMIRECTORY/conf
 	echo "[global]" >> $PHPFPMIRECTORY/conf
@@ -292,6 +295,7 @@ function ConfigureFPM {
 	echo "pm.start_servers = 1" >> $PHPFPMIRECTORY/conf
 	echo "pm.min_spare_servers = 1" >> $PHPFPMIRECTORY/conf
 	echo "pm.max_spare_servers = 5" >> $PHPFPMIRECTORY/conf
+	echo "php_admin_value[session.save_path] = $PHPFPMIRECTORY/session" >> $PHPFPMIRECTORY/conf
 }
 
 function StartMySQL {
