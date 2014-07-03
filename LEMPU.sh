@@ -502,7 +502,7 @@ do
 				2) #Install phpMyAdmin
 					CheckVars
 					cd $NGROOTDIR
-					wget -q "http://sourceforge.net/projects/phpmyadmin/files/phpMyAdmin/4.2.5/phpMyAdmin-4.2.5-all-languages.tar.bz2/download" -O phpMyAdmin-4.2.5-all-languages.tar.gz
+					wget -q "http://sourceforge.net/projects/phpmyadmin/files/phpMyAdmin/4.2.5/phpMyAdmin-4.2.5-all-languages.tar.gz/download" -O phpMyAdmin-4.2.5-all-languages.tar.gz
 					tar xzf phpMyAdmin-4.2.5-all-languages.tar.gz
 					rm phpMyAdmin-4.2.5-all-languages.tar.gz
 					mv phpMyAdmin-4.2.5-all-languages phpmyadmin
