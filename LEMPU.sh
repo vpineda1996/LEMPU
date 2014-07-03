@@ -13,7 +13,7 @@
 # MySQL version 5.6.19
 # PHP version 5.5.14
 
-
+clear
 echo 'Welcome to this quick LEMP installer'
 echo ""
 echo "I need to ask you a few questions before starting the setup"
