@@ -10,6 +10,5 @@ Run the script and follow the assistant:
 ###Dependencies
 - You must be able to complie as user. Most seedbox providers who support ssh login have compilers.
 - If you intent to use authentication services with NGINX you must be able to run crypt. This command comes with mcrypt directory, else it isn't necesary.
-
-####Whatbox
-This runs out of the box to Whatbox.ca users.
+- Confirmed shared environments that this script works
+  - This runs out of the box to Whatbox.ca users.
