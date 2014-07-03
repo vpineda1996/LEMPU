@@ -5,7 +5,7 @@ Script to install LEMP or LAMP (Nginx, MySQL, PHP) in Userland.  It isn't bullet
 ###Instalation
 
 Run the script and follow the assistant:
-`wget http://git.io/2j2s6g --no-check-certificate -O LEMPU.sh; chmod +x LEMPU.sh; ./LEMPU.sh`
+`mkdir installLEMPU;cd installLEMPU; wget -q http://git.io/2j2s6g --no-check-certificate -O LEMPU.sh; chmod +x LEMPU.sh; ./LEMPU.sh`
 
 ###Whatbox
 This runs out of the box to Whatbox.ca users.
