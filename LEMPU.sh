@@ -418,8 +418,7 @@ do
 				echo ""
 				echo "1) Configure Nginx"
 				echo "2) Configure MySQL"
-				echo "3) Configure PHP-FPM"
-				echo "4) Exit"
+				echo "3) Exit"
 				echo ""
 				read -p "Select an option [1-4]: " setupOption1
 				case $setupOption1 in
@@ -434,10 +433,7 @@ do
 						fi
 						ConfigureMySQL
 						;;
-					3) # Configure PHP --missing
-						ConfigureFPM
-						;;
-					4) 
+					3) 
 						;;
 				esac
 			;;
