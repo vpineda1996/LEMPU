@@ -385,7 +385,7 @@ do
 						ConfigureMySQL
 						# Install FPM...
 						InstallFPM
-						echo "Confgiuring MySQL"
+						echo "Confgiuring PHP-FPM"
 						ConfigureFPM
 						# Install Nginx...
 						InstallNginx
